@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow_ref }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -36,6 +36,16 @@ jobs:
           $dockerContext = docker context show
           if ($dockerContext -ne "skrog") {
             throw "Expected Docker context 'skrog', got: $dockerContext"
+          }
+
+          $dockerService = Get-Service docker -ErrorAction SilentlyContinue
+          if ($dockerService -and $dockerService.Status -ne "Stopped") {
+            throw "Expected Docker Engine to be stopped."
+          }
+
+          $dockerHost = docker context inspect skrog --format '{{.Endpoints.docker.Host}}'
+          if ($dockerHost -ne 'npipe:////./pipe/docker_engine') {
+            throw "Expected Skrog to use the standard Docker named pipe, got: $dockerHost"
           }
 
           $dockerOsType = docker info --format '{{.OSType}}'
