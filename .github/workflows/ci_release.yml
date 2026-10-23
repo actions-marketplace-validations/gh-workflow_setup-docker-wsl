@@ -30,6 +30,8 @@ jobs:
     uses: ./.github/workflows/CI_lint-super-linter.yml
     permissions:
       contents: read
+      issues: write
+      pull-requests: write
 
   live-test:
     name: Run live test
