@@ -16,6 +16,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Run super-linter
+    uses: ./.github/workflows/CI_lint-super-linter.yml
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
   live-action-test:
     name: Run live action test
     runs-on: windows-latest
@@ -82,3 +90,19 @@ jobs:
           docker context inspect skrog
           Write-Host "Docker daemon information:"
           docker info
+
+  required-status-checks:
+    name: "Required Status Checks" # do not change, used in ruleset "Required Status Checks"
+    if: ${{ always() }}
+    needs:
+      - lint
+      - live-action-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check validation job results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq --exit-status --arg event_name "$GITHUB_EVENT_NAME" \
+            'all(.[]; .result == "success" or ($event_name == "push" and .result == "skipped"))' \
+            <<< "$NEEDS"
