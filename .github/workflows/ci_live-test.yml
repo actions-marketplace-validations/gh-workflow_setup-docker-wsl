@@ -103,6 +103,6 @@ jobs:
         env:
           NEEDS: ${{ toJSON(needs) }}
         run: |
-          jq --exit-status --arg event_name "$GITHUB_EVENT_NAME" \
-            'all(.[]; .result == "success" or ($event_name == "push" and .result == "skipped"))' \
+          jq --exit-status \
+            'all(.[]; .result == "success" or .result == "skipped")' \
             <<< "$NEEDS"
